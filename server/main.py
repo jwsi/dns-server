@@ -1,5 +1,5 @@
 import threading, socket, dnslib
-from search import search
+from .search import search
 
 
 class UDPHandler():
