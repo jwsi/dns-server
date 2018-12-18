@@ -12,7 +12,7 @@ class UDPHandler():
         Constructor for the UDP Handler class.
         """
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind(("0.0.0.0", 8000))
+        self.sock.bind(("0.0.0.0", 53))
         self.clients_list = []
 
 
