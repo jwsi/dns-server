@@ -33,12 +33,12 @@ class UDPHandler():
                 aa = 1
                 rr_list += rr
                 auth_list.append(
-                    dnslib.RR(rname = domain,
+                    dnslib.RR(rname = domain.lower(),
                               rtype = dnslib.QTYPE.NS,
                               rdata = dnslib.NS("ns1.uh-dns.com"),
                               ttl   = 172800))
                 auth_list.append(
-                    dnslib.RR(rname = domain,
+                    dnslib.RR(rname = domain.lower(),
                               rtype = dnslib.QTYPE.NS,
                               rdata = dnslib.NS("ns2.uh-dns.com"),
                               ttl   = 172800))
