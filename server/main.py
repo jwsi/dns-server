@@ -42,16 +42,6 @@ class UDPHandler():
                               rtype = dnslib.QTYPE.NS,
                               rdata = dnslib.NS("ns2.uh-dns.com"),
                               ttl   = 172800))
-                auth_list.append(
-                    dnslib.RR(rname = domain,
-                              rtype = dnslib.QTYPE.NS,
-                              rdata = dnslib.NS("ns3.uh-dns.com"),
-                              ttl   = 172800))
-                auth_list.append(
-                    dnslib.RR(rname = domain,
-                              rtype = dnslib.QTYPE.NS,
-                              rdata = dnslib.NS("ns4.uh-dns.com"),
-                              ttl   = 172800))
         # Build the response.
         response = dnslib.DNSRecord(dnslib.DNSHeader(id = id, qr = 1, aa = aa, ra = 0, rd = recursion_desired),
                                     questions = request.questions,

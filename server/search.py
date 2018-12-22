@@ -30,7 +30,7 @@ def search(domain, q_type):
     try:
         # Search the database for all live records on the domain
         results = records.query(
-            KeyConditionExpression=Key('domain').eq(domain),
+            KeyConditionExpression=Key('domain').eq(domain.lower()),
             FilterExpression=Attr('live').eq(True)
         )["Items"]
     except KeyError:
@@ -45,6 +45,8 @@ def search(domain, q_type):
 
 def _identify_record(record, q_type):
     rr_list = _cname_search(record) # CNAME record search (return for all records)
+    if rr_list != []:
+        return rr_list
     if q_type == dnslib.QTYPE.A or q_type == dnslib.QTYPE.ANY:
         rr_list += _a_search(record) # A record search
     if q_type == dnslib.QTYPE.AAAA or q_type == dnslib.QTYPE.ANY:
