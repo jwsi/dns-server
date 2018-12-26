@@ -25,28 +25,21 @@ class UDPHandler():
         request = dnslib.DNSRecord.parse(datagram)
         recursion_desired = request.header.rd
         id = request.header.id
-        rr_list, auth_list, aa = [], [], 0
+        answer, authority, additional, aa = [], [], [], 0
         for question in request.questions:
             domain = question.qname.idna()
-            rr = search(domain, question.qtype)
-            if rr != []:
-                aa = 1
-                rr_list += rr
-                auth_list.append(
-                    dnslib.RR(rname = domain.lower(),
-                              rtype = dnslib.QTYPE.NS,
-                              rdata = dnslib.NS("ns1.uh-dns.com"),
-                              ttl   = 172800))
-                auth_list.append(
-                    dnslib.RR(rname = domain.lower(),
-                              rtype = dnslib.QTYPE.NS,
-                              rdata = dnslib.NS("ns2.uh-dns.com"),
-                              ttl   = 172800))
+            rr_set, auth_set, addi_set = search(domain, question.qtype)
+            answer += rr_set
+            authority += auth_set
+            additional += addi_set
+        if authority != []:
+            aa = 1
         # Build the response.
         response = dnslib.DNSRecord(dnslib.DNSHeader(id = id, qr = 1, aa = aa, ra = 0, rd = recursion_desired),
                                     questions = request.questions,
-                                    rr   = rr_list,
-                                    auth = auth_list)
+                                    rr   = answer,
+                                    auth = authority,
+                                    ar   = additional)
         # Write to the socket.
         self.sock.sendto(response.pack(), ip)
 
