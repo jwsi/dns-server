@@ -49,7 +49,7 @@ def _identify_record(record, q_type):
     addi_list = additional list.
     """
     rr_list, auth_list, addi_list = [], [], []
-    _cname_search(record, rr_list) # CNAME record search (return for all records)
+    _cname_search(record, rr_list, auth_list, addi_list) # CNAME record search (return for all records)
     if rr_list != []:
         return rr_list, auth_list, addi_list
     if q_type == dnslib.QTYPE.A or q_type == dnslib.QTYPE.ANY:
@@ -114,11 +114,13 @@ def _aaaa_search(record, rr_list, auth_list, addi_list):
     except:
         pass
 
-def _cname_search(record, rr_list):
+def _cname_search(record, rr_list, auth_list, addi_list):
     """
     Searches and adds any CNAME records for the domain.
     :param record: Overall record for domain
     :param rr_list: Current record list for the domain
+    :param auth_list: Authority list for the domain
+    :param addi_list: Additional list for the domain
     """
     try:
         cname_record = record["CNAME"]
@@ -127,6 +129,8 @@ def _cname_search(record, rr_list):
                                  rtype = dnslib.QTYPE.CNAME,
                                  rdata = dnslib.CNAME(label = cname_record["domain"]),
                                  ttl   = ttl))
+        _add_authority(record["domain"], auth_list)
+        _add_additional(addi_list)
     except:
         pass
 
