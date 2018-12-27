@@ -60,8 +60,6 @@ def _identify_record(record, q_type):
         _ns_search(record, rr_list, addi_list) # NS record search
     if q_type == dnslib.QTYPE.MX or q_type == dnslib.QTYPE.ANY:
         _mx_search(record, rr_list, auth_list, addi_list) # MX record search
-    if q_type == dnslib.QTYPE.SOA or q_type == dnslib.QTYPE.ANY:
-        _soa_search(record, rr_list, auth_list, addi_list) # SOA record search
     if q_type == dnslib.QTYPE.TXT or q_type == dnslib.QTYPE.ANY:
         _txt_search(record, rr_list, auth_list, addi_list) # TXT record search
     if q_type == dnslib.QTYPE.SRV or q_type == dnslib.QTYPE.ANY:
@@ -70,6 +68,10 @@ def _identify_record(record, q_type):
         _caa_search(record, rr_list, auth_list, addi_list) # CAA record search
     if q_type == dnslib.QTYPE.NAPTR or q_type == dnslib.QTYPE.ANY:
         _naptr_search(record, rr_list, auth_list, addi_list) # NAPTR record search
+    if q_type == dnslib.QTYPE.SOA or q_type == dnslib.QTYPE.ANY:
+        _soa_search(record, rr_list, auth_list, addi_list, authority=False) # SOA record search
+    if rr_list == []:
+        _soa_search(record, rr_list, auth_list, addi_list, authority=True)  # Add SOA record to auth section for missing queries on a known domain
     return rr_list, auth_list, addi_list
 
 def _a_search(record, rr_list, auth_list, addi_list):
@@ -175,27 +177,32 @@ def _mx_search(record, rr_list, auth_list, addi_list):
     except:
         pass
 
-def _soa_search(record, rr_list, auth_list, addi_list):
+def _soa_search(record, rr_list, auth_list, addi_list, authority=False):
     """
     Searches and adds any SOA records for the domain.
     :param record: Overall record for domain
     :param rr_list: Current record list for the domain
     :param auth_list: Authority list for the domain
     :param addi_list: Additional list for the domain
+    :param authority: Add record to authority list or answer list.
     """
     try:
         soa_record = record["SOA"]
         ttl = int(soa_record["ttl"])
         times = soa_record["times"]
         times = list(map(lambda time: int(time), times))
-        rr_list.append(dnslib.RR(rname = record["domain"],
+        rr = dnslib.RR(rname = record["domain"],
                                  rtype = dnslib.QTYPE.SOA,
                                  rdata = dnslib.SOA(mname = soa_record["mname"],
                                                     rname = soa_record["rname"],
                                                     times = times),
-                                 ttl   = ttl))
-        _add_authority(record["domain"], auth_list)
-        _add_additional(addi_list)
+                                 ttl   = ttl)
+        if authority:
+            auth_list.append(rr)
+        else:
+            rr_list.append(rr)
+            _add_authority(record["domain"], auth_list)
+            _add_additional(addi_list)
     except:
         pass
 

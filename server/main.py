@@ -25,7 +25,7 @@ class UDPHandler():
         request = dnslib.DNSRecord.parse(datagram)
         recursion_desired = request.header.rd
         id = request.header.id
-        answer, authority, additional, aa = [], [], [], 0
+        answer, authority, additional, aa, rcode = [], [], [], 0, 0
         for question in request.questions:
             domain = question.qname.idna()
             rr_set, auth_set, addi_set = search(domain, question.qtype)
@@ -33,9 +33,11 @@ class UDPHandler():
             authority += auth_set
             additional += addi_set
         if authority != []:
-            aa = 1
+            aa = 1 # Mark as authorative answer.
+        elif answer == [] and authority == []:
+            rcode = 5 # Refuse unknown domains.
         # Build the response.
-        response = dnslib.DNSRecord(dnslib.DNSHeader(id = id, qr = 1, aa = aa, ra = 0, rd = recursion_desired),
+        response = dnslib.DNSRecord(dnslib.DNSHeader(id = id, qr = 1, aa = aa, ra = 0, rd = recursion_desired, rcode=rcode),
                                     questions = request.questions,
                                     rr   = answer,
                                     auth = authority,
