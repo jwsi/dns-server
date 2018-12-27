@@ -132,6 +132,7 @@ def _cname_search(record, rr_list, auth_list, addi_list):
                                  rdata = dnslib.CNAME(label = cname_record["domain"]),
                                  ttl   = ttl))
         _add_authority(record["domain"], auth_list)
+        _add_additional(addi_list)
     except:
         pass
 
