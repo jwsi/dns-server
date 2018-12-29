@@ -328,10 +328,20 @@ def _add_additional(addi_list):
         addi_list.append(
             dnslib.RR(rname="ns1.uh-dns.com.",
                       rtype=dnslib.QTYPE.A,
-                      rdata=[dnslib.A("18.130.161.247"), dnslib.AAAA("2a05:d01c:35b:7601::4")],
+                      rdata=dnslib.A("18.130.161.247"),
+                      ttl=3600))
+        addi_list.append(
+            dnslib.RR(rname="ns1.uh-dns.com.",
+                      rtype=dnslib.QTYPE.AAAA,
+                      rdata=dnslib.AAAA("2a05:d01c:35b:7601::4"),
                       ttl=3600))
         addi_list.append(
             dnslib.RR(rname="ns2.uh-dns.com.",
                       rtype=dnslib.QTYPE.A,
-                      rdata=[dnslib.A("18.130.86.161"), dnslib.AAAA("2a05:d01c:35b:7600::4")],
+                      rdata=dnslib.A("18.130.86.161"),
+                      ttl=3600))
+        addi_list.append(
+            dnslib.RR(rname="ns2.uh-dns.com.",
+                      rtype=dnslib.QTYPE.AAAA,
+                      rdata=dnslib.AAAA("2a05:d01c:35b:7600::4"),
                       ttl=3600))
