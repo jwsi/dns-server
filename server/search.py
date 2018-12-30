@@ -70,8 +70,8 @@ def _identify_record(record, q_type):
         _naptr_search(record, rr_list, auth_list, addi_list) # NAPTR record search
     if q_type == dnslib.QTYPE.SOA or q_type == dnslib.QTYPE.ANY:
         _soa_search(record, rr_list, auth_list, addi_list, authority=False) # SOA record search
-    if rr_list == []:
-        _soa_search(record, rr_list, auth_list, addi_list, authority=True)  # Add SOA record to auth section for missing queries on a known domain
+    if rr_list == [] and auth_list == []:
+        _soa_search(record, rr_list, auth_list, addi_list, authority=True) # SOA record search
     return rr_list, auth_list, addi_list
 
 def _a_search(record, rr_list, auth_list, addi_list):
@@ -177,7 +177,7 @@ def _mx_search(record, rr_list, auth_list, addi_list):
     except:
         pass
 
-def _soa_search(record, rr_list, auth_list, addi_list, authority=False):
+def _soa_search(record, rr_list, auth_list, addi_list, authority):
     """
     Searches and adds any SOA records for the domain.
     :param record: Overall record for domain
@@ -204,7 +204,9 @@ def _soa_search(record, rr_list, auth_list, addi_list, authority=False):
             _add_authority(record["domain"], auth_list)
             _add_additional(addi_list)
     except:
-        pass
+        parent_domain = record["domain"].split(".", 1)[1:][0]
+        p_rr_list, _, _ = search(domain=parent_domain, q_type=dnslib.QTYPE.SOA)
+        auth_list.extend(p_rr_list)
 
 def _txt_search(record, rr_list, auth_list, addi_list):
     """
