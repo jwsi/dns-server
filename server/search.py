@@ -1,4 +1,4 @@
-import boto3, os, logging, dnslib
+import boto3, os, logging, dnslib, tldextract
 from boto3.dynamodb.conditions import Key, Attr
 
 # Set global logging level.
@@ -33,7 +33,7 @@ def search(domain, q_type):
         )["Items"][0]
         rr_list, auth_list, addi_list = _identify_record(record, q_type)
     except (KeyError, IndexError):
-        if domain.count(".") > 2: # Only perform recursive search if . occurs more than once. E.g. test.uh-dns.com.
+        if tldextract.extract(domain).subdomain != "": # Perform search up to domain.tld.
             parent_domain = domain.split(".", 1)[1:][0]
             p_rr_list, p_auth_list, _ = search(domain=parent_domain, q_type=dnslib.QTYPE.SOA)
             if p_rr_list == []:
