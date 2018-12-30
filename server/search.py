@@ -33,8 +33,15 @@ def search(domain, q_type):
         )["Items"][0]
         rr_list, auth_list, addi_list = _identify_record(record, q_type)
     except (KeyError, IndexError):
-        pass
+        if domain.count(".") > 2: # Only perform recursive search if . occurs more than once. E.g. test.uh-dns.com.
+            parent_domain = domain.split(".", 1)[1:][0]
+            p_rr_list, p_auth_list, _ = search(domain=parent_domain, q_type=dnslib.QTYPE.SOA)
+            if p_rr_list == []:
+                auth_list.extend(p_auth_list)
+            else:
+                auth_list.extend(p_rr_list)
     logger.info("Response: " + str(rr_list))
+    print(auth_list)
     return rr_list, auth_list, addi_list
 
 def _identify_record(record, q_type):
@@ -305,20 +312,22 @@ def _naptr_search(record, rr_list, auth_list, addi_list):
 def _add_authority(domain, auth_list):
     """
     Given a domain and an authority set,
-    this function will add the UH DNS nameservers to the set.
+    this function will add the UH DNS nameservers to the set if they don't already exist.
     :param domain: Domain to be authoritative over.
     :param auth_list: Auth set to add to.
     """
-    auth_list.append(
-        dnslib.RR(rname=domain,
+    record1 = dnslib.RR(rname=domain,
                   rtype=dnslib.QTYPE.NS,
                   rdata=dnslib.NS("ns1.uh-dns.com"),
-                  ttl=3600))
-    auth_list.append(
-        dnslib.RR(rname=domain,
+                  ttl=3600)
+    record2 = dnslib.RR(rname=domain,
                   rtype=dnslib.QTYPE.NS,
                   rdata=dnslib.NS("ns2.uh-dns.com"),
-                  ttl=3600))
+                  ttl=3600)
+    if record1 not in auth_list:
+        auth_list.append(record1)
+    if record2 not in auth_list:
+        auth_list.append(record2)
 
 def _add_additional(addi_list):
     """
