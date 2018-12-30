@@ -40,8 +40,7 @@ def search(domain, q_type):
                 auth_list.extend(p_auth_list)
             else:
                 auth_list.extend(p_rr_list)
-    logger.info("Response: " + str(rr_list))
-    print(auth_list)
+    logger.info("Response: " + domain + " RR: " + str(rr_list) + " Auth: " + str(auth_list) + " Add: " + str(addi_list))
     return rr_list, auth_list, addi_list
 
 def _identify_record(record, q_type):
