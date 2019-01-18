@@ -15,6 +15,14 @@ class UDPHandler():
         self.sock.bind(("0.0.0.0", 53))
         self.clients_list = []
 
+    def edns_check(self, opt_record):
+        flags = ""
+        if opt_record.edns_do:
+            flags = "do"
+        if opt_record.edns_ver != 0:
+            opt = dnslib.EDNS0(version=0, ext_rcode=1, flags=flags, udp_len=opt_record.edns_len,)
+            return False, opt
+        return True, dnslib.EDNS0(version=0, ext_rcode=0, flags=flags, udp_len=opt_record.edns_len)
 
     def respond_to_client(self, datagram, ip):
         """
@@ -26,18 +34,20 @@ class UDPHandler():
         recursion_desired = request.header.rd
         id = request.header.id
         answer, authority, additional, aa, rcode = [], [], [], 0, 0
-        for question in request.questions:
-            domain = question.qname.idna()
-            rr_set, auth_set, addi_set = search(domain, question.qtype)
-            answer += rr_set
-            authority += auth_set
-            additional += addi_set
-            additional += request.ar
-        if authority != []:
-            aa = 1 # Mark as authorative answer.
-        elif answer == [] and authority == []:
-            rcode = 5 # Refuse unknown domains.
-        # Build the response.
+        ok, opt = self.edns_check(request.ar[0])
+        additional.append(opt)
+        if ok:
+            for question in request.questions:
+                domain = question.qname.idna()
+                rr_set, auth_set, addi_set = search(domain, question.qtype)
+                answer += rr_set
+                authority += auth_set
+                additional += addi_set
+            if authority != []:
+                aa = 1 # Mark as authorative answer.
+            elif answer == [] and authority == []:
+                rcode = 5 # Refuse unknown domains.
+            # Build the response.
         response = dnslib.DNSRecord(dnslib.DNSHeader(id = id, qr = 1, aa = aa, ra = 0, rd = recursion_desired, rcode=rcode),
                                     questions = request.questions,
                                     rr   = answer,
@@ -45,7 +55,6 @@ class UDPHandler():
                                     ar   = additional)
         # Write to the socket.
         self.sock.sendto(response.pack(), ip)
-
 
     def listen(self):
         """
