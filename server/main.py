@@ -32,6 +32,7 @@ class UDPHandler():
             answer += rr_set
             authority += auth_set
             additional += addi_set
+            additional += request.ar
         if authority != []:
             aa = 1 # Mark as authorative answer.
         elif answer == [] and authority == []:
