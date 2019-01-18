@@ -33,9 +33,10 @@ class UDPHandler():
         request = dnslib.DNSRecord.parse(datagram)
         recursion_desired = request.header.rd
         id = request.header.id
-        answer, authority, additional, aa, rcode = [], [], [], 0, 0
-        ok, opt = self.edns_check(request.ar[0])
-        additional.append(opt)
+        answer, authority, additional, aa, rcode, ok = [], [], [], 0, 0, True
+        if request.ar != []:
+            ok, opt = self.edns_check(request.ar[0])
+            additional.append(opt)
         if ok:
             for question in request.questions:
                 domain = question.qname.idna()
