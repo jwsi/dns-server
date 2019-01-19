@@ -324,6 +324,7 @@ def _alias_search(q_type, record, rr_list, auth_list, addi_list):
         ttl = int(alias_record["ttl"])
         question = dnslib.DNSRecord.question(alias_record["domain"], qtype=dnslib.QTYPE[q_type])
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(1)
         sock.bind(("", 0)) # Bind to any available IP and port.
         sock.sendto(question.pack(), ("10.0.0.2", 53))
         res = dnslib.DNSRecord.parse(sock.recv(4096))
