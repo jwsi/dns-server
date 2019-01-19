@@ -1,4 +1,4 @@
-import boto3, os, logging, dnslib, tldextract
+import boto3, os, logging, dnslib, tldextract, socket
 from boto3.dynamodb.conditions import Key, Attr
 
 # Set global logging level.
@@ -89,6 +89,7 @@ def _a_search(record, rr_list, auth_list, addi_list):
     :param addi_list: Additional list for the domain
     """
     try:
+        _alias_search(dnslib.QTYPE.A, record, rr_list, auth_list, addi_list)
         a_record = record["A"]
         ttl = int(a_record["ttl"])
         for ip in a_record["value"]:
@@ -110,6 +111,7 @@ def _aaaa_search(record, rr_list, auth_list, addi_list):
     :param addi_list: Additional list for the domain
     """
     try:
+        _alias_search(dnslib.QTYPE.AAAA, record, rr_list, auth_list, addi_list)
         aaaa_record = record["AAAA"]
         ttl = int(aaaa_record["ttl"])
         for ip in aaaa_record["value"]:
@@ -303,6 +305,39 @@ def _naptr_search(record, rr_list, auth_list, addi_list):
                                                           regexp      = (value.get("regexp") or "").encode('utf-8'),
                                                           replacement = value["replacement"]),
                                      ttl   = ttl))
+            _add_authority(record["domain"], auth_list)
+            _add_additional(addi_list)
+    except:
+        pass
+
+def _alias_search(q_type, record, rr_list, auth_list, addi_list):
+    """
+    If no A or AAAA records exist this function will add any fixed alias records.
+    :param q_type: Query type (A or AAAA) alias records accepted.
+    :param record: Record from DB.
+    :param rr_list: resource record list.
+    :param auth_list: authority list.
+    :param addi_list: additional list.
+    """
+    try:
+        alias_record = record["ALIAS"]
+        ttl = int(alias_record["ttl"])
+        question = dnslib.DNSRecord.question(alias_record["domain"], qtype=dnslib.QTYPE[q_type])
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(1)
+        sock.bind(("", 0)) # Bind to any available IP and port.
+        sock.sendto(question.pack(), ("10.0.0.2", 53))
+        res = dnslib.DNSRecord.parse(sock.recv(4096))
+        for r in res.rr:
+            ip = str(r.rdata)
+            if q_type == dnslib.QTYPE.A:
+                rdata = dnslib.A(ip)
+            elif q_type == dnslib.QTYPE.AAAA:
+                rdata = dnslib.AAAA(ip)
+            rr_list.append(dnslib.RR(rname=record["domain"],
+                                     rtype=q_type,
+                                     rdata=rdata,
+                                     ttl=ttl))
             _add_authority(record["domain"], auth_list)
             _add_additional(addi_list)
     except:
