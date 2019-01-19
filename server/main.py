@@ -50,7 +50,7 @@ class TransportHandler():
                 answer += rr_set
                 authority += auth_set
                 additional += addi_set
-            if authority != []:
+            if authority != [] or answer != []:
                 aa = 1  # Mark as authorative answer.
             elif answer == [] and authority == []:
                 rcode = 5  # Refuse unknown domains.
