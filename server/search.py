@@ -328,6 +328,7 @@ def _alias_search(q_type, record, rr_list, auth_list, addi_list):
         sock.bind(("", 0)) # Bind to any available IP and port.
         sock.sendto(question.pack(), ("10.0.0.2", 53))
         res = dnslib.DNSRecord.parse(sock.recv(4096))
+        sock.close()
         for r in res.rr:
             ip = str(r.rdata)
             if q_type == dnslib.QTYPE.A:
